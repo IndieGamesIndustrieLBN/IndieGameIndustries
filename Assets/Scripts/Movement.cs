@@ -8,15 +8,17 @@ public class PlayerController : MonoBehaviour
 
     private bool isMoving;
     public LayerMask solidObjectsLayer;
-    
+
     public Transform weaponHolder;
     private SpriteRenderer spriteRenderer;
+    private Animator animator;
 
     private Vector2 input;
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>(); // Pobranie komponentu SpriteRenderer
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>(); // Pobierz animator
     }
 
     private void Update()
@@ -36,20 +38,27 @@ public class PlayerController : MonoBehaviour
             input.x = Input.GetAxisRaw("Horizontal");
             input.y = Input.GetAxisRaw("Vertical");
 
+            // Flipping postaci
+            if (input.x > 0)
+                spriteRenderer.flipX = false;
+            else if (input.x < 0)
+                spriteRenderer.flipX = true;
+
+            // Ustaw animację
+            animator.SetBool("isMoving", input != Vector2.zero);
+
             if (input != Vector2.zero)
             {
-                // Sprawdzamy kierunek i zmieniamy flipX
-                if (input.x > 0)
-                    spriteRenderer.flipX = false; // Patrzy w prawo
-                else if (input.x < 0)
-                    spriteRenderer.flipX = true; // Patrzy w lewo
-
                 var targetPos = transform.position;
                 targetPos.x += input.x;
                 targetPos.y += input.y;
 
                 if (isWalkable(targetPos))
                     StartCoroutine(Move(targetPos));
+            }
+            else
+            {
+                animator.SetBool("isMoving", false);
             }
         }
 
@@ -62,15 +71,17 @@ public class PlayerController : MonoBehaviour
     IEnumerator Move(Vector3 targetPos)
     {
         isMoving = true;
+
         while ((targetPos - transform.position).sqrMagnitude > Mathf.Epsilon)
         {
             transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
             yield return null;
         }
-        transform.position = targetPos;
 
+        transform.position = targetPos;
         isMoving = false;
 
+        animator.SetBool("isMoving", false); // wróć do Idle po ruchu
         CheckForEncounters();
     }
 
@@ -90,5 +101,3 @@ public class PlayerController : MonoBehaviour
         }
     }
 }
-
-
