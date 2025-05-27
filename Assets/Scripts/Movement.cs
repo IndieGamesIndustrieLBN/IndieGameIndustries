@@ -1,9 +1,10 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float moveSpeed = 5f;
+    public float moveSpeed;
 
     private bool isMoving;
     public LayerMask solidObjectsLayer;
@@ -48,7 +49,6 @@ public class PlayerController : MonoBehaviour
                 weaponHolder.localRotation = Quaternion.Euler(0f, 0f, 50f); // obrót broni w lewo
         }
 
-        // Ruch
         if (!isMoving && input != Vector2.zero)
         {
             Vector3 targetPos = transform.position;
@@ -58,20 +58,26 @@ public class PlayerController : MonoBehaviour
             if (isWalkable(targetPos))
                 StartCoroutine(Move(targetPos));
         }
+
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            Debug.Log("Pozycja gracza: " + transform.position);
+        }
     }
 
     IEnumerator Move(Vector3 targetPos)
     {
         isMoving = true;
-
         while ((targetPos - transform.position).sqrMagnitude > Mathf.Epsilon)
         {
             transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
             yield return null;
         }
-
         transform.position = targetPos;
+        animator.SetTrigger("isRunning");
         isMoving = false;
+
+        CheckForEncounters();
     }
 
     private bool isWalkable(Vector3 targetPos)
